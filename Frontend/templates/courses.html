@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses - Online Learning Platform</title>
+</head>
+<body>
+    <header>
+        <h1>Available Courses</h1>
+    </header>
+    <main>
+        <section>
+            <h2>List of Courses</h2>
+            <ul id="courses-list"></ul>
+        </section>
+        <section>
+            <h2>Add a New Course</h2>
+            <form id="add-course-form">
+                <input type="text" id="course-code" placeholder="Course Code" required>
+                <input type="text" id="course-name" placeholder="Course Name" required>
+                <input type="text" id="course-description" placeholder="Course Description" required>
+                <button type="submit">Add Course</button>
+            </form>
+        </section>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchCourses();
+
+            document.getElementById('add-course-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addNewCourse();
+            });
+        });
+
+        function fetchCourses() {
+            fetch('/api/courses')
+                .then(response => response.json())
+                .then(data => {
+                    const coursesList = document.getElementById('courses-list');
+                    coursesList.innerHTML = '';
+                    data.forEach(course => {
+                        const li = document.createElement('li');
+                        li.textContent = `Code: ${course.code} - Name: ${course.name} - Description: ${course.description}`;
+                        coursesList.appendChild(li);
+                    });
+                })
+                .catch(error => console.error('Error fetching courses:', error));
+        }
+
+        function addNewCourse() {
+            const code = document.getElementById('course-code').value;
+            const name = document.getElementById('course-name').value;
+            const description = document.getElementById('course-description').value;
+
+            fetch('/api/courses', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code, name, description })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data); // Log the response from the server
+                fetchCourses(); // Refresh the courses list after adding a new course
+            })
+            .catch(error => console.error('Error adding course:', error));
+        }
+    </script>
+</body>
+</html>
