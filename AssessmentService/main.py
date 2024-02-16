@@ -23,7 +23,7 @@ class Question(db.Model):
     quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
     options = db.relationship('Option', backref='question', lazy=True)
 
-    def serialize(self):
+    def serialize(self): # 
         return {'id': self.id, 'text': self.text, 'correct_answer': self.correct_answer, 'options': [o.serialize() for o in self.options]}
 
 class Option(db.Model):
@@ -45,7 +45,7 @@ class Assignment(db.Model):
         return {'id': self.id, 'title': self.title, 'description': self.description, 'due_date': self.due_date.isoformat() if self.due_date else None}
 
 # Route Definitions
-@app.route('/quizzes', methods=['GET', 'POST'])
+@app.route('/quizzes', methods=['GET', 'POST']) # Add PUT and DELETE methods to the list of allowed methods for this route
 def handle_quizzes():
     if request.method == 'GET':
         quizzes = Quiz.query.all()
@@ -57,7 +57,7 @@ def handle_quizzes():
         db.session.commit()
         return jsonify(new_quiz.serialize()), 201
 
-@app.route('/assignments', methods=['GET', 'POST'])
+@app.route('/assignments', methods=['GET', 'POST']) # Add PUT and DELETE methods to the list of allowed methods for this route
 def handle_assignments():
     if request.method == 'GET':
         assignments = Assignment.query.all()
@@ -69,7 +69,7 @@ def handle_assignments():
         db.session.commit()
         return jsonify(new_assignment.serialize()), 201
 
-@app.route('/submit_quiz/<int:quiz_id>', methods=['POST'])
+@app.route('/submit_quiz/<int:quiz_id>', methods=['POST']) # Add PUT and DELETE methods to the list of allowed methods for this route
 def submit_quiz(quiz_id):
     data = request.get_json()  # Assuming data is {'answers': {'question_id': 'selected_option_identifier', ...}}
     quiz = Quiz.query.get_or_404(quiz_id)
