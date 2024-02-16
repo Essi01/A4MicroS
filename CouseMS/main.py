@@ -1,13 +1,43 @@
 from flask import Flask, jsonify, request
-from flask_cors import CORS
 from pymongo import MongoClient
 
 app = Flask(__name__)
-CORS(app)  # This will enable CORS for all routes
+
+
+# Function to add CORS headers to the response
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'PUT, GET, POST, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    return response
+
+
+# Apply CORS headers to all routes
+app.after_request(add_cors_headers)
 
 # Connect to your MongoDB database
 client = MongoClient('mongodb://localhost:27017/')
 db = client.course_management
+
+
+def initialize_courses():
+    # Pre-populate the database with courses if they don't already exist
+    courses_data = [
+        {"code": "IKT221", "name": "Chaos Engineering", "description": "Learn the principles of Chaos Engineering..."},
+        {"code": "IKT222", "name": "Software Security", "description": "Dive into software security..."},
+        {"code": "IKT230", "name": "GPT Coding", "description": "Explore the capabilities of Generative Pretrained Transformers in coding and software generation."},
+        {"code": "IKT333", "name": "Disaster Recovery", "description": "Study the strategies for disaster recovery and business continuity in the face of IT outages."},
+        {"code": "IKT322", "name": "Criminality and Warfare",
+         "description": "Analyze the impact of cyber criminality and information warfare in the digital age."}
+    ]
+
+    for course in courses_data:
+        db.courses.update_one({'code': course['code']}, {'$setOnInsert': course}, upsert=True)
+
+
+# Initialize courses when the application starts
+initialize_courses()
+
 
 # Define the route for getting all courses
 @app.route('/courses', methods=['GET'])
@@ -15,13 +45,18 @@ def get_courses():
     courses = db.courses.find({}, {'_id': 0})  # Exclude the MongoDB id from the results
     return jsonify(list(courses))
 
+
 # Define the route for adding a new course
 @app.route('/courses', methods=['POST'])
 def add_course():
     course_data = request.get_json()
-    result = db.courses.insert_one(course_data)
-    # Return the new ID of the inserted course
-    return jsonify(str(result.inserted_id)), 201
+    result = db.courses.update_one(
+        {'code': course_data['code']},
+        {'$setOnInsert': course_data},
+        upsert=True
+    )
+    return jsonify({'inserted_id': str(result.upserted_id)}), 201
+
 
 # Define the route for deleting a course
 @app.route('/courses/<string:course_code>', methods=['DELETE'])
@@ -32,14 +67,7 @@ def delete_course(course_code):
     else:
         return jsonify({'error': 'course not found'}), 404
 
+
 if __name__ == '__main__':
-    app.run(debug=True)
-# In this example, we have a simple Flask application that connects to a MongoDB database and provides a REST API for managing courses.
-# The application has three routes: one for getting all courses, one for adding a new course, and one for deleting a course.
-# The routes use the Flask request object to access the JSON data sent by the client, and the jsonify function to return JSON responses.
-# We also use the Flask-CORS extension to enable Cross-Origin Resource Sharing (CORS) for all routes, allowing the API to be accessed from different domains.
-# The application connects to a MongoDB database using the MongoClient class from the pymongo library.
-# The get_courses route retrieves all courses from the MongoDB collection and returns them as a JSON array.
-# The add_course route inserts a new course into the MongoDB collection and returns the ID of the newly inserted document.
-# The delete_course route deletes a course from the MongoDB collection based on its course code and returns a success message or an error if the course is not found.
+    app.run(debug=True, port=5001)
 
