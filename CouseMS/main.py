@@ -3,7 +3,6 @@ from pymongo import MongoClient
 
 app = Flask(__name__)
 
-
 # Function to add CORS headers to the response
 def add_cors_headers(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
@@ -15,24 +14,28 @@ def add_cors_headers(response):
 # Apply CORS headers to all routes
 app.after_request(add_cors_headers)
 
-# Connect to your MongoDB database
+# Connect to your MongoDB database with the name '@localhost'
 client = MongoClient('mongodb://localhost:27017/')
-db = client.course_management
+db = client['course_management']
+
 
 
 def initialize_courses():
-    # Pre-populate the database with courses if they don't already exist
-    courses_data = [
-        {"code": "IKT221", "name": "Chaos Engineering", "description": "Learn the principles of Chaos Engineering..."},
-        {"code": "IKT222", "name": "Software Security", "description": "Dive into software security..."},
-        {"code": "IKT230", "name": "GPT Coding", "description": "Explore the capabilities of Generative Pretrained Transformers in coding and software generation."},
-        {"code": "IKT333", "name": "Disaster Recovery", "description": "Study the strategies for disaster recovery and business continuity in the face of IT outages."},
-        {"code": "IKT322", "name": "Criminality and Warfare",
-         "description": "Analyze the impact of cyber criminality and information warfare in the digital age."}
-    ]
-
-    for course in courses_data:
-        db.courses.update_one({'code': course['code']}, {'$setOnInsert': course}, upsert=True)
+        # Pre-populate the database with courses if they don't already exist
+        courses_data = [
+            {"code": "IKT221", "name": "Chaos Engineering", "description": "Learn the principles of Chaos Engineering..."},
+            {"code": "IKT222", "name": "Software Security", "description": "Dive into software security..."},
+            {"code": "IKT230", "name": "GPT Coding", "description": "Explore the capabilities of Generative Pretrained Transformers in coding and software generation."},
+            {"code": "IKT333", "name": "Disaster Recovery", "description": "Study the strategies for disaster recovery and business continuity in the face of IT outages."},
+            {"code": "IKT322", "name": "Criminality and Warfare", "description": "Analyze the impact of cyber criminality and information warfare in the digital age."}
+        ]
+        for course in courses_data:
+            # The 'code' field should be unique for each course
+            db.courses.update_one(
+                {'code': course['code']},
+                {'$setOnInsert': course},
+                upsert=True
+            ) # Insert the course if it doesn't already exist
 
 
 # Initialize courses when the application starts
@@ -69,5 +72,8 @@ def delete_course(course_code):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5001)  # Run the application on port 5001
+
+
+
 
