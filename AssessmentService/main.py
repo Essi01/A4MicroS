@@ -7,6 +7,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///Assessment.sqlite'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+
 # Model Definitions
 class Quiz(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -76,6 +77,15 @@ def submit_quiz(quiz_id):
     total = len(quiz.questions)
     correct = sum(1 for q in quiz.questions if data['answers'].get(str(q.id)) == q.correct_answer)
     return jsonify({'total': total, 'correct': correct, 'score': f"{correct}/{total}"}), 200
+
+#  AttributeError: 'Flask' object has no attribute 'before_first_request'
+#  Fix it by adding the following line before the first request handler
+@app.before_first_request
+def before_first_request():
+    print("Creating all tables...")
+
+def hello_world():
+    print("Hello, World!")
 
 if __name__ == '__main__':
     with app.app_context():
